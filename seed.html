@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Test Data · Self Regulation Mastery</title>
+<!-- DEVELOPMENT TOOL ONLY. The app never loads this page. Delete seed.html before release. -->
+<script>try{var s=(JSON.parse(localStorage.getItem('srm.v1')).settings||{}).theme,d=s==='dark'||(!s&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light'}catch(e){}</script>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+<style>
+  body{overflow:auto}
+  .wrap{max-width:480px;margin:0 auto;padding:calc(var(--s8) + var(--sat)) var(--s4) var(--s8)}
+  .wrap>*+*{margin-top:var(--s3)}
+  .top{display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s5)}
+  .top h1{font-size:24px;line-height:1.2}
+  .top p{font-size:13px;color:var(--muted)}
+  .warn{display:block;padding:var(--s3) var(--s4);border-radius:var(--r-md);background:var(--warn-tint);color:var(--warn-txt);font-size:13px;font-weight:600;line-height:1.5}
+  .card p{font-size:14px;line-height:1.55;color:var(--text-2)}
+  .card ul{margin:var(--s2) 0 0 var(--s5);font-size:14px;line-height:1.6;color:var(--text-2)}
+  .stat{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);font-size:14px}
+  .stat b{font:600 15px var(--f-display);color:var(--head)}
+  #msg{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;padding:var(--s3);border-radius:var(--r-md);font-size:14px;font-weight:600}
+  #msg.ok{background:var(--ok-tint);color:var(--ok-txt)}
+  #msg.err{background:var(--err-tint);color:var(--err-txt)}
+  .btns{display:grid;gap:var(--s2)}
+  a.btn{text-decoration:none}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top">
+    <span class="hic" aria-hidden="true"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span>
+    <div><h1>Test data</h1><p>Self Regulation Mastery · developer tool</p></div>
+  </div>
+
+  <div class="warn" role="note">For testing only. Delete <code>seed.html</code> before you publish the app.</div>
+
+  <div class="glass card">
+    <p><b>Seed test data</b> adds three profiles of different ages: X with 35 days, Y with 20 days and Z with 3 days of tracking (up to yesterday). Today is left for you to test the Track tab.</p>
+    <ul>
+      <li><b>X</b> (female): last 7 days are the <b>everything right</b> example, with a rest period that started 10 days ago from Asr and ended 5 days ago from Dhuhr (so Fajr that day is rest). Insights: "Based on 7 days · 5 days recorded · 2 rest", every card ✓. Older days (35 in all, so the PDF's 31-day limit can be tested): weaker Fajr on weekends, some Habit.</li>
+      <li><b>Y</b> (male): last 7 days are the <b>needs care</b> example: 3 days ago not recorded, missed Fajr and Isha, Habit and Pressure, not on time, Moderate and Weak, and all four Happiness cases. 20 days in all (15 days ago also not recorded); older weeks start weaker and improve each week.</li>
+      <li><b>Z</b> (female, new user): 3 days. 3 days ago an ordinary day; 2 days ago Fajr and Dhuhr prayed, then a rest period from Asr that is still running. Track shows "Is your rest still continuing?"; the PDF shows a short report.</li>
+    </ul>
+    <p style="margin-top:8px">The same data is produced every time. <b>Clear</b> removes only X, Y and Z. Your own profiles are never touched.</p>
+  </div>
+
+  <div class="glass card">
+    <div class="stat"><span>Seeded profiles now</span><b id="cnt">–</b></div>
+    <div class="stat" style="margin-top:6px"><span>Your own profiles</span><b id="own">–</b></div>
+  </div>
+
+  <div class="btns">
+    <button class="btn pri wide" id="seed">Seed test data</button>
+    <button class="btn dng wide" id="clear">Clear seeded data</button>
+    <a class="btn ghost wide" href="./">Open the app</a>
+  </div>
+  <div id="msg" role="status"></div>
+</main>
+
+<script>
+'use strict';
+const K='srm.v1',PR=['fajr','dhuhr','asr','maghrib','isha'],SEED=['seed_x','seed_y','seed_z'],NAMES={seed_x:'X',seed_y:'Y',seed_z:'Z'};
+const $=s=>document.querySelector(s);
+const dk=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); // local date, same as the app
+const fresh=()=>({schemaVersion:3,settings:{lang:'en'},profiles:{},trackingData:{},drafts:{}});
+function load(){try{const d=JSON.parse(localStorage.getItem(K));if(d&&d.schemaVersion){d.profiles=d.profiles||{};d.trackingData=d.trackingData||{};d.drafts=d.drafts||{};d.settings=d.settings||{lang:'en'};return d}}catch(e){}return fresh()}
+const save=d=>localStorage.setItem(K,JSON.stringify(d));
+const say=(t,c)=>{const m=$('#msg');m.textContent=t;m.className=c||''};
+function refresh(){const d=load(),ids=Object.keys(d.profiles);$('#cnt').textContent=ids.filter(i=>SEED.includes(i)).length+' of 3';$('#own').textContent=ids.filter(i=>!SEED.includes(i)).length}
+
+/* deterministic random: same data on every seed */
+function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+const at=(d,h,m)=>{const x=new Date(d);x.setHours(h,m,0,0);return x.toISOString()};
+const ago=(today,i)=>{const d=new Date(today);d.setDate(d.getDate()-i);return d};
+
+/* One saved day exactly as the app stores it (v4):
+   - a rest prayer (start / end day of a rest period): {prayed:false,motive:null,manner:null,rest:true}
+   - not prayed -> motive & manner null
+   - Life Impact only when every due prayer was performed, otherwise null
+   - happy: 'well' | 'moderate' | 'none' every recorded day */
+function day(d,o,r){const rs=o.rest||[],prayers={};
+  PR.forEach(p=>{if(rs.includes(p)){prayers[p]={prayed:false,motive:null,manner:null,rest:true};return}
+    const y=!(o.miss||[]).includes(p);
+    prayers[p]={prayed:y,motive:y?((o.habit||[]).includes(p)?'habit':(o.pressure||[]).includes(p)?'pressure':'purpose'):null,manner:y?!(o.notRight||[]).includes(p):null}});
+  const due=PR.filter(p=>!rs.includes(p)),all=due.every(p=>prayers[p].prayed);
+  return{isExempt:false,prayers,impact:all?(o.impact||'better'):null,happy:o.hap,savedAt:at(d,21,10+Math.floor(r()*45))}}
+/* a full rest day inside a rest period: the app writes it by itself (auto) the same way */
+const restDay=d=>({isExempt:true,prayers:null,impact:null,happy:null,savedAt:at(d,21,0),auto:true});
+/* an ordinary older day from chances */
+function rand(d,r,c){const o={miss:[],habit:[],pressure:[],notRight:[]};
+  PR.forEach(p=>{if(r()>c.pray(p))return o.miss.push(p);if(r()>c.purpose)(r()<c.press?o.pressure:o.habit).push(p);if(r()>c.right(p))o.notRight.push(p)});
+  const good=!o.miss.length&&!o.habit.length&&!o.pressure.length;
+  o.impact=good?(r()<.85?'better':'average'):(r()<.5?'average':'poor');
+  const earned=good&&!o.notRight.length&&o.impact==='better';
+  o.hap=earned?(r()<.85?'well':'moderate'):(r()<.25?'well':r()<.6?'moderate':'none');
+  return day(d,o,r)}
+
+/* X (female): last 7 days = "everything right" with rest.
+   Rest period: from Asr 10 days ago (Fajr + Dhuhr prayed that day) to Dhuhr 5 days ago (Fajr that day is rest).
+   7 days: 7 & 6 days ago rest · 5 days ago 4 of 4 · 4–1 days ago all perfect. */
+const DAYS={seed_x:35,seed_y:20,seed_z:3}; // tracked days per profile (yesterday back to N days ago)
+function buildX(today){const r=rng(11),td={};
+  for(let i=1;i<=DAYS.seed_x;i++){const d=ago(today,i),k=dk(d);
+    if(i<=4){td[k]=day(d,{impact:'better',hap:'well'},r);continue}
+    if(i===5){td[k]=day(d,{rest:['fajr'],impact:'better',hap:'well'},r);continue}
+    if(i<=9){td[k]=restDay(d);continue}
+    if(i===10){td[k]=day(d,{rest:['asr','maghrib','isha'],impact:'better',hap:'well'},r);continue}
+    const wk=[0,6].includes(d.getDay());
+    td[k]=rand(d,r,{pray:p=>p==='fajr'?(wk?.3:.85):.95,purpose:.88,press:.25,right:()=>.8})}
+  return td}
+const restX=today=>[{s:dk(ago(today,10)),sp:2,e:dk(ago(today,5)),ep:1}];
+
+/* Y (male): last 7 days = "needs care"; every Insights card shows its improvement message:
+   missed 7 of 35 (Fajr 2, Isha 2, Dhuhr 1, Asr 1, Maghrib 1; 3 days ago not recorded) · 2 of 28 without purpose
+   · 2 of 28 not on time / right way · Moderate 1, Weak 1, 3 days cannot be assessed
+   · Happiness: complete & well 1, complete & low 1, short & well 2, short & low 2 */
+const Y7={1:{impact:'better',hap:'well'},
+  2:{miss:['fajr'],hap:'moderate'},
+  4:{habit:['isha'],notRight:['fajr'],impact:'poor',hap:'well'},
+  5:{impact:'better',hap:'moderate'},
+  6:{miss:['isha'],hap:'well'},
+  7:{pressure:['asr'],notRight:['isha'],impact:'average',hap:'none'}};
+function buildY(today){const r=rng(29),td={};
+  for(let i=1;i<=DAYS.seed_y;i++){if(i===3||i===15)continue; // not recorded
+    const d=ago(today,i),k=dk(d),w=Math.min(4,Math.ceil(i/7)); // week 1 = most recent
+    if(Y7[i]){td[k]=day(d,Y7[i],r);continue}
+    const P=[0,.97,.86,.72,.58][w],M=[0,.95,.82,.68,.55][w],Q=[0,.9,.78,.64,.5][w]; // each week better than the one before
+    td[k]=rand(d,r,{pray:()=>P,purpose:M,press:w>=3?.7:.35,right:p=>p==='isha'?Q-.3:Q})}
+  return td}
+
+/* Z (female, new user, 3 days): 3 days ago ordinary · 2 days ago Fajr + Dhuhr, rest from Asr · 1 day ago rest.
+   The rest period is still running (the app adds today by itself). */
+function buildZ(today){const r=rng(47),td={};
+  for(let i=1;i<=DAYS.seed_z;i++){const d=ago(today,i),k=dk(d);
+    if(i===1){td[k]=restDay(d);continue}
+    if(i===2){td[k]=day(d,{rest:['asr','maghrib','isha'],impact:'better',hap:'well'},r);continue}
+    td[k]=rand(d,r,{pray:()=>.92,purpose:.85,press:.3,right:()=>.82})}
+  return td}
+const restZ=today=>[{s:dk(ago(today,2)),sp:2,e:null,ep:null}];
+
+$('#seed').onclick=()=>{try{
+  const d=load(),clash=Object.values(d.profiles).find(p=>!SEED.includes(p.id)&&['x','y','z'].includes(p.name.trim().toLowerCase()));
+  if(clash)return say(`You already have your own profile named “${clash.name}”. Rename it in the app first.`,'err');
+  const today=new Date();today.setHours(12,0,0,0);
+  const created=id=>{const c=ago(today,DAYS[id]);c.setHours(9,0,0,0);return c.toISOString()}; // each profile starts on its first tracked day
+  const mk=(id,gender,rest)=>{d.profiles[id]={id,name:NAMES[id],gender,createdAt:created(id),seeded:true};if(rest)d.profiles[id].rest=rest;delete d.drafts[id]};
+  mk('seed_x','female',restX(today));mk('seed_y','male');mk('seed_z','female',restZ(today));
+  d.trackingData.seed_x=buildX(today);d.trackingData.seed_y=buildY(today);d.trackingData.seed_z=buildZ(today);
+  d.schemaVersion=Math.max(d.schemaVersion||0,3);
+  save(d);refresh();
+  say(`Done. X: ${Object.keys(d.trackingData.seed_x).length} days, Y: ${Object.keys(d.trackingData.seed_y).length} days, Z: ${Object.keys(d.trackingData.seed_z).length} days. Open (or reload) the app.`,'ok');
+}catch(e){say('Could not save test data: '+e.message,'err')}};
+
+$('#clear').onclick=()=>{try{
+  const d=load();let n=0;
+  SEED.forEach(id=>{if(d.profiles[id])n++;delete d.profiles[id];delete d.trackingData[id];delete d.drafts[id]});
+  save(d);refresh();say(n?'Seeded profiles X, Y and Z and all their data were removed.':'There was no seeded data to remove.','ok');
+}catch(e){say('Could not clear: '+e.message,'err')}};
+
+refresh();
+</script>
+</body>
+</html>
